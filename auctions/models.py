@@ -12,6 +12,7 @@ class Listing(models.Model):
     starting_bid = models.IntegerField()
     image_url = models.URLField()
     category = models.CharField(max_length=100)
+    current_bid = models.IntegerField(default=0)
 
     def __str__(self):
         return f"Listing {self.id}. {self.title}"

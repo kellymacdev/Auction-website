@@ -11,8 +11,11 @@
                      <img src="{{ item.image_url }}" alt="picture of a {{ item.title }}">
                  {% endif %}
                 <p>{{ item.description }}</p>
-                <!-- fix later, should be current bid -->
-                <p id="starting-bid-title">Starting Bid: R{{ item.starting_bid }}</p>
+                 {% if item.current_bid == 0 %}
+                <p>Starting bid: R{{ item.starting_bid }}</p>
+            {% else %}
+               <p>Current bid: R{{ item.current_bid }}</p>
+            {% endif %}
             </div>
             </li>
         {% endfor %}

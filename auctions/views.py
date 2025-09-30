@@ -67,20 +67,36 @@ def register(request):
 
 def listing(request, title):
     return render(request, "auctions/listing.html", {
-        "item": Listing.objects.get(title=title)
+        "item": Listing.objects.get(title=title),
     })
-
-
-
-
 
 def create_listing(request):
     if request.method == "POST":
         title = request.POST["item_title"]
         description = request.POST["item_description"]
         starting_bid = request.POST["item_starting_bid"]
-        item_image_url = request.POST["item_image_url"]
+        image_url = request.POST["item_image_url"]
         category = request.POST["category"]
-        return render(request, "auctions/create_listing.html")
+        new_listing = Listing(title=title, description=description, starting_bid=starting_bid,image_url=image_url,category=category)
+        new_listing.save()
+        return redirect(reverse("listing", args=[title]))
     else:
         return render(request, "auctions/create_listing.html")
+
+
+def new_bid(request,title):
+    item = Listing.objects.get(title=title)
+    if request.method == "POST":
+        bid = int(request.POST["new_bid"])
+
+        if bid <= item.current_bid:
+            return render(request, "auctions/listing.html", {
+                "item": item,
+                "bid_message": f"You must bid higher than item.current_bid."
+            })
+        else:
+            item.current_bid = bid
+            item.save()
+            return render(request, "auctions/listing.html", {
+            "item": Listing.objects.get(title=title)
+            })
