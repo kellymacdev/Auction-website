@@ -3,5 +3,21 @@
 {% block body %}
     <h2>Active Listings</h2>
 
-    TODO
+    <ul>
+        {% for item in active_listings %}
+            <li><div id="listing-box">
+                <a href="{% url 'listing' title=item.title %}">{{ item.title }}</a>
+                 {% if item.image_url != '' %}
+                     <img src="{{ item.image_url }}" alt="picture of a {{ item.title }}">
+                 {% endif %}
+                <p>{{ item.description }}</p>
+                <!-- fix later, should be current bid -->
+                <p id="starting-bid-title">Starting Bid: R{{ item.starting_bid }}</p>
+            </div>
+            </li>
+        {% endfor %}
+    </ul>
+    
+        
+    <a href="{% url 'create_listing' %}">Create a listing</a>
 {% endblock %}
