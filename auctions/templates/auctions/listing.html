@@ -1,0 +1,50 @@
+{% extends "auctions/layout.html" %}
+
+{% block title %}
+{{ item.title }}
+{% endblock %}
+
+{% block body %}
+    <h1>{{ item.title.capitalize }}</h1>
+    {% if item.image_url != '' %}
+        <img src="{{ item.image_url }}" alt="picture of a {{ item.title }}">
+    {% endif %}
+    <p>{{ item.description }}</p>
+    <!-- fix later, should be current bid -->
+    {% if item.current_bid != 0 %}
+    <p id="starting-bid-title">Current Bid:
+        R{{ item.current_bid }}</p>
+    {% else %}
+        <p id="starting-bid-title">Current Bid:
+        R{{ item.starting_bid }}</p>
+    {% endif %}
+    
+    {% if item.category != '' %}
+        <p id="category-title">Category: {{ item.category }}</p>
+    {% endif %}
+    
+    {% if user.is_authenticated %}
+        <!-- add to watchlist -->
+        
+        
+        <form action="{% url 'new_bid' title=item.title%}" method="post">
+        {% csrf_token %}
+            {% if item.current_bid == 0 %}
+                <label for="new_bid">Be the first to bid:</label>
+                <input id="new_bid" type="number" name="new_bid" min={{ item.starting_bid }}>
+            {% else %}
+                <label for="new_bid">Place a bid:</label>
+                <input id="new_bid" type="number" name="new_bid" min={{ item.current_bid }}>
+            {% endif %}
+        <input type="submit">
+        </form>
+        
+        {% if bid_message %}
+            <div id="bid-too-low">
+                <p>{{ bid_message }}</p>
+            </div>
+        {% endif %}
+        
+    {% endif %}
+    
+{% endblock %}
