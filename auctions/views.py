@@ -105,6 +105,22 @@ def listing(request, item_id):
         "in_watchlist": in_watchlist
     })
 
+def categories(request):
+    #get a list of the categories from all active listings (flat = True just gives straight list rather than tuples)
+    #and excludes all the empty categories
+    active_listing_categories = Listing.objects.filter(active=True).exclude(category='').values_list("category", flat=True)
+    return render(request, "auctions/categories.html", {
+        "active_categories": active_listing_categories
+    })
+
+def category(request, cat):
+    listings_in_cat = Listing.objects.filter(active=True, category=cat)
+    return render(request, "auctions/category.html",{
+        "listings_in_category": listings_in_cat,
+        "category_name": cat
+    })
+
+
 @login_required
 def create_listing(request):
     if request.method == "POST":
@@ -137,8 +153,8 @@ def new_bid(request,item_id):
                     "highest_bid": item.bids.order_by("-bid_amount").first()
                 })
             else:
-                new_bid = Bid(bid_amount=bid, user=request.user, item=item)
-                new_bid.save()
+                new_bid1 = Bid(bid_amount=bid, user=request.user, item=item)
+                new_bid1.save()
                 return redirect('listing',item_id=item.id)
 
         #if there hasn't been a bid yet
@@ -149,16 +165,16 @@ def new_bid(request,item_id):
                     "equal_bid_message": True
                 })
             else:
-                new_bid = Bid(bid_amount=bid, user=request.user, item=item)
-                new_bid.save()
+                new_bid2 = Bid(bid_amount=bid, user=request.user, item=item)
+                new_bid2.save()
                 return redirect('listing',item_id=item.id)
 
 
 @login_required
 def watchlist(request):
-    users_watchlist = Watchlist.objects.filter(user=request.user)
-    return render(request, 'auctions/watchlist.html',{
-        "watchlist": users_watchlist
+    users_watchlist1 = Watchlist.objects.filter(user=request.user)
+    return render(request, "auctions/watchlist.html", {
+        "watchlist": users_watchlist1
     })
 
 @login_required
@@ -187,3 +203,6 @@ def remove_watchlist(request, item_id):
         item = Listing.objects.get(pk=item_id)
         Watchlist.objects.filter(user=request.user, listing=item).delete()
         return redirect("listing", item_id=item.id)
+
+
+ #
