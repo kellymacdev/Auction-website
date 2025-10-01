@@ -10,8 +10,8 @@ class Listing(models.Model):
     title = models.CharField(max_length=100)
     description = models.TextField()
     starting_bid = models.IntegerField()
-    image_url = models.URLField()
-    category = models.CharField(max_length=100)
+    image_url = models.URLField(blank=True)
+    category = models.CharField(max_length=100, blank=True)
     current_bid = models.IntegerField(default=0)
 
     def __str__(self):
@@ -19,6 +19,9 @@ class Listing(models.Model):
 
 class Bid(models.Model):
     pass
+    #bid_amount = models.IntegerField(default=0)
+    #user = models.ForeignKey(User, on_delete=models.CASCADE)
+    #to link a user to a bid, on deleting a user, their bids are deleted too
 
 class Comment(models.Model):
     pass

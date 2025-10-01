@@ -1,10 +1,20 @@
 from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
 from django.db import IntegrityError
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render, redirect
 from django.urls import reverse
+from django import forms
 
 from .models import User, Listing
+
+class NewListingForm(forms.ModelForm):
+    class Meta:
+        model = Listing
+        fields = ["title", "description", "starting_bid", "image_url", "category"]
+
+
+
 
 
 def index(request):
@@ -70,20 +80,21 @@ def listing(request, title):
         "item": Listing.objects.get(title=title),
     })
 
+@login_required
 def create_listing(request):
     if request.method == "POST":
-        title = request.POST["item_title"]
-        description = request.POST["item_description"]
-        starting_bid = request.POST["item_starting_bid"]
-        image_url = request.POST["item_image_url"]
-        category = request.POST["category"]
-        new_listing = Listing(title=title, description=description, starting_bid=starting_bid,image_url=image_url,category=category)
-        new_listing.save()
-        return redirect(reverse("listing", args=[title]))
+        new_listing = NewListingForm(request.POST)
+        if new_listing.is_valid():
+            title = new_listing.cleaned_data["title"]
+            new_listing.save()
+            return redirect(reverse("listing", args=[title]))
     else:
-        return render(request, "auctions/create_listing.html")
+        return render(request, "auctions/create_listing.html", {
+            "new_form": NewListingForm()
+        })
 
 
+@login_required
 def new_bid(request,title):
     item = Listing.objects.get(title=title)
     if request.method == "POST":
