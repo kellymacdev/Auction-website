@@ -6,7 +6,8 @@ from django.shortcuts import render, redirect
 from django.urls import reverse
 from django import forms
 
-from .models import User, Listing, Bid
+from .models import User, Listing, Bid, Watchlist
+
 
 class NewListingForm(forms.ModelForm):
     class Meta:
@@ -18,9 +19,9 @@ class NewListingForm(forms.ModelForm):
 
 
 def index(request):
-    all_listings = Listing.objects.all()
+    active_listings = Listing.objects.filter(active=True)
     listings_and_highest_bids = []
-    for item in all_listings:
+    for item in active_listings:
         highest_bid = item.bids.order_by("-bid_amount").first()
         listings_and_highest_bids.append({
             "listing": item,
@@ -29,6 +30,20 @@ def index(request):
     return render(request, "auctions/index.html", {
             "listings_and_highest_bids": listings_and_highest_bids
             }) # returns list of all listings plus their highest bids
+
+
+def past_auctions(request):
+    closed_listings = Listing.objects.filter(active=False)
+    closed_listings_and_highest_bids = []
+    for item in closed_listings:
+        highest_bid = item.bids.order_by("-bid_amount").first()
+        closed_listings_and_highest_bids.append({
+            "listing": item,
+            "highest_bid": highest_bid
+        })
+    return render(request, "auctions/past_auctions.html",{
+        "closed_listings": closed_listings_and_highest_bids
+    })
 
 def login_view(request):
     if request.method == "POST":
@@ -81,11 +96,13 @@ def register(request):
     else:
         return render(request, "auctions/register.html")
 
-def listing(request, title):
-    item = Listing.objects.get(title=title)
+def listing(request, item_id):
+    item = Listing.objects.get(pk=item_id)
+    in_watchlist = Watchlist.objects.filter(user=request.user, listing=item).exists()
     return render(request, "auctions/listing.html", {
         "item": item,
-        "highest_bid": item.bids.order_by("-bid_amount").first()
+        "highest_bid": item.bids.order_by("-bid_amount").first(),
+        "in_watchlist": in_watchlist
     })
 
 @login_required
@@ -93,11 +110,10 @@ def create_listing(request):
     if request.method == "POST":
         new_listing = NewListingForm(request.POST)
         if new_listing.is_valid():
-            title = new_listing.cleaned_data["title"]
             new= new_listing.save(commit=False)
             new.user = request.user
             new.save()
-            return redirect(reverse("listing", args=[title]))
+            return redirect("listing", item_id=new.id)
     else:
         return render(request, "auctions/create_listing.html", {
             "new_form": NewListingForm()
@@ -105,8 +121,8 @@ def create_listing(request):
 
 
 @login_required
-def new_bid(request,title):
-    item = Listing.objects.get(title=title)
+def new_bid(request,item_id):
+    item = Listing.objects.get(pk=item_id)
     if request.method == "POST":
         bid = int(request.POST.get("new_bid"))
         current_highest_bid = item.bids.order_by("-bid_amount").first()
@@ -123,7 +139,7 @@ def new_bid(request,title):
             else:
                 new_bid = Bid(bid_amount=bid, user=request.user, item=item)
                 new_bid.save()
-                return redirect('listing',title=item.title)
+                return redirect('listing',item_id=item.id)
 
         #if there hasn't been a bid yet
         else:
@@ -131,13 +147,43 @@ def new_bid(request,title):
                 return render(request, "auctions/listing.html", {
                     "item": item,
                     "equal_bid_message": True
-                    #f"You must bid higher than the starting bid of R{item.starting_bid}."
                 })
             else:
                 new_bid = Bid(bid_amount=bid, user=request.user, item=item)
                 new_bid.save()
-                return redirect('listing',title=item.title)
+                return redirect('listing',item_id=item.id)
 
 
+@login_required
+def watchlist(request):
+    users_watchlist = Watchlist.objects.filter(user=request.user)
+    return render(request, 'auctions/watchlist.html',{
+        "watchlist": users_watchlist
+    })
+
+@login_required
+def close_listing(request, item_id):
+    if request.method == "POST":
+        item = Listing.objects.get(pk=item_id)
+        item.active = False
+        if item.bids:
+            item.winner = item.bids.order_by("-bid_amount").first().user
+        item.save()
+
+        return redirect("listing", item_id=item.id)
 
 
+@login_required
+def add_watchlist(request, item_id):
+    if request.method == "POST":
+        item = Listing.objects.get(pk=item_id)
+        new_entry = Watchlist(user=request.user, listing=item)
+        new_entry.save()
+        return redirect("listing", item_id=item.id)
+
+@login_required
+def remove_watchlist(request, item_id):
+    if request.method == "POST":
+        item = Listing.objects.get(pk=item_id)
+        Watchlist.objects.filter(user=request.user, listing=item).delete()
+        return redirect("listing", item_id=item.id)

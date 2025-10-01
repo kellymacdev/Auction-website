@@ -9,7 +9,7 @@
             {% else %}
         {% for item in listings_and_highest_bids %}
             <li><div id="listing-box">
-                <a href="{% url 'listing' title=item.listing.title %}">{{ item.listing.title }}</a>
+                <h3><a href="{% url 'listing' item_id=item.listing.id %}">{{ item.listing.title }}</a></h3>
                  {% if item.listing.image_url != '' %}
                      <img src="{{ item.listing.image_url }}" alt="picture of a {{ item.listing.title }}">
                  {% endif %}
@@ -25,6 +25,6 @@
         {% endif %}
     </ul>
     
-        
-    <a href="{% url 'create_listing' %}">Create a listing</a>
+    
+    <!--<a href="{% url 'create_listing' %}">Create a listing</a>-->
 {% endblock %}
