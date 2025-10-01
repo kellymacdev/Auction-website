@@ -12,16 +12,22 @@ class Listing(models.Model):
     starting_bid = models.IntegerField()
     image_url = models.URLField(blank=True)
     category = models.CharField(max_length=100, blank=True)
-    current_bid = models.IntegerField(default=0)
+    current_bid = models.IntegerField(default=0, null=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
 
     def __str__(self):
         return f"Listing {self.id}. {self.title}"
 
 class Bid(models.Model):
-    pass
-    #bid_amount = models.IntegerField(default=0)
-    #user = models.ForeignKey(User, on_delete=models.CASCADE)
-    #to link a user to a bid, on deleting a user, their bids are deleted too
+    #pass
+    bid_amount = models.IntegerField(default=0)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='bids')
+    item = models.ForeignKey(Listing, on_delete=models.CASCADE, related_name='bids')
+    #to link a user to their bids. On deleting a user, their bids are deleted too
+    #to link an item to bids. "
+
+    def __str__(self):
+        return f"{self.user} bid R{self.bid_amount} on {self.item} listing"
 
 class Comment(models.Model):
     pass

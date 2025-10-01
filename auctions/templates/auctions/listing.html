@@ -10,41 +10,47 @@
         <img src="{{ item.image_url }}" alt="picture of a {{ item.title }}">
     {% endif %}
     <p>{{ item.description }}</p>
+    <p>Starting bid: R{{ item.starting_bid }}</p>
     <!-- fix later, should be current bid -->
-    {% if item.current_bid != 0 %}
-    <p id="starting-bid-title">Current Bid:
-        R{{ item.current_bid }}</p>
+    
+    {% if item.bids.all %} <!-- if the list of bids is not empty-->
+        <p>Highest bid: R{{ highest_bid.bid_amount }}</p>
     {% else %}
-        <p id="starting-bid-title">Starting Bid:
-        R{{ item.starting_bid }}</p>
+        <p>No bids yet. Be the first to bid!</p>
     {% endif %}
     
+    <!-- spot for showing who holds the current highest bid -->
+
     {% if item.category != '' %}
         <p id="category-title">Category: {{ item.category }}</p>
     {% endif %}
-    
+
     {% if user.is_authenticated %}
         <!-- add to watchlist -->
         
         
-        <form action="{% url 'new_bid' title=item.title%}" method="post">
+        <form action="{% url 'new_bid' title=item.title %}" method="POST">
         {% csrf_token %}
-            {% if item.current_bid == 0 %}
-                <label for="new_bid">Be the first to bid:</label>
-                <input id="new_bid" type="number" name="new_bid" min={{ item.starting_bid }}>
+        <label for="new_bid_input">Place a bid:</label>
+            {% if highest_bid %}
+                <input id="new_bid_input" type="number" name="new_bid" min={{ highest_bid.bid_amount }} step="0.01">
             {% else %}
-                <label for="new_bid">Place a bid:</label>
-                <input id="new_bid" type="number" name="new_bid" min={{ item.current_bid }}>
+                <input id="new_bid_input" type="number" name="new_bid" min={{ item.starting_bid }} step="0.01">
             {% endif %}
         <input type="submit">
         </form>
-        
-        {% if bid_message %}
+
+        {% if equal_bid_message is True %}
             <div id="bid-too-low">
-                <p>{{ bid_message }}</p>
+            {% if highest_bid %}
+                 <p>You must bid <strong>higher</strong> than the current bid of R{{ highest_bid.bid_amount }}.</p>
+            {% else %}
+                <p>You must bid <strong>higher</strong> than the starting bid of R{{ item.starting_bid }}.</p>
+            {% endif %}
             </div>
         {% endif %}
-        
+    {% else %}
+        <p>You must <a href="{% url 'login' %}">Log in</a> to place a bid.</p>
     {% endif %}
     
 {% endblock %}

@@ -6,7 +6,7 @@ from django.shortcuts import render, redirect
 from django.urls import reverse
 from django import forms
 
-from .models import User, Listing
+from .models import User, Listing, Bid
 
 class NewListingForm(forms.ModelForm):
     class Meta:
@@ -19,10 +19,16 @@ class NewListingForm(forms.ModelForm):
 
 def index(request):
     all_listings = Listing.objects.all()
-    return render(request, "auctions/index.html",{
-        "active_listings": all_listings
-    })
-
+    listings_and_highest_bids = []
+    for item in all_listings:
+        highest_bid = item.bids.order_by("-bid_amount").first()
+        listings_and_highest_bids.append({
+            "listing": item,
+            "highest_bid": highest_bid
+        })
+    return render(request, "auctions/index.html", {
+            "listings_and_highest_bids": listings_and_highest_bids
+            }) # returns list of all listings plus their highest bids
 
 def login_view(request):
     if request.method == "POST":
@@ -76,8 +82,10 @@ def register(request):
         return render(request, "auctions/register.html")
 
 def listing(request, title):
+    item = Listing.objects.get(title=title)
     return render(request, "auctions/listing.html", {
-        "item": Listing.objects.get(title=title),
+        "item": item,
+        "highest_bid": item.bids.order_by("-bid_amount").first()
     })
 
 @login_required
@@ -86,7 +94,9 @@ def create_listing(request):
         new_listing = NewListingForm(request.POST)
         if new_listing.is_valid():
             title = new_listing.cleaned_data["title"]
-            new_listing.save()
+            new= new_listing.save(commit=False)
+            new.user = request.user
+            new.save()
             return redirect(reverse("listing", args=[title]))
     else:
         return render(request, "auctions/create_listing.html", {
@@ -98,16 +108,36 @@ def create_listing(request):
 def new_bid(request,title):
     item = Listing.objects.get(title=title)
     if request.method == "POST":
-        bid = int(request.POST["new_bid"])
+        bid = int(request.POST.get("new_bid"))
+        current_highest_bid = item.bids.order_by("-bid_amount").first()
 
-        if bid <= item.current_bid:
-            return render(request, "auctions/listing.html", {
-                "item": item,
-                "bid_message": f"You must bid higher than item.current_bid."
-            })
+        #if there has already been a bid
+        if current_highest_bid is not None:
+            current_bid_amount = int(current_highest_bid.bid_amount)
+            if current_bid_amount >= bid: #new bid is less than highest bid
+                return render(request, "auctions/listing.html", {
+                    "item": item,
+                    "equal_bid_message": True,
+                    "highest_bid": item.bids.order_by("-bid_amount").first()
+                })
+            else:
+                new_bid = Bid(bid_amount=bid, user=request.user, item=item)
+                new_bid.save()
+                return redirect('listing',title=item.title)
+
+        #if there hasn't been a bid yet
         else:
-            item.current_bid = bid
-            item.save()
-            return render(request, "auctions/listing.html", {
-            "item": Listing.objects.get(title=title)
-            })
+            if item.starting_bid >= bid: #new bid is less than starting bid
+                return render(request, "auctions/listing.html", {
+                    "item": item,
+                    "equal_bid_message": True
+                    #f"You must bid higher than the starting bid of R{item.starting_bid}."
+                })
+            else:
+                new_bid = Bid(bid_amount=bid, user=request.user, item=item)
+                new_bid.save()
+                return redirect('listing',title=item.title)
+
+
+
+

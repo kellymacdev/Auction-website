@@ -4,21 +4,25 @@
     <h2>Active Listings</h2>
 
     <ul>
-        {% for item in active_listings %}
-            <li><div id="listing-box">
-                <a href="{% url 'listing' title=item.title %}">{{ item.title }}</a>
-                 {% if item.image_url != '' %}
-                     <img src="{{ item.image_url }}" alt="picture of a {{ item.title }}">
-                 {% endif %}
-                <p>{{ item.description }}</p>
-                 {% if item.current_bid == 0 %}
-                <p>Starting bid: R{{ item.starting_bid }}</p>
+        {%  if not listings_and_highest_bids %}
+            <li>No active listings</li>
             {% else %}
-               <p>Current bid: R{{ item.current_bid }}</p>
-            {% endif %}
+        {% for item in listings_and_highest_bids %}
+            <li><div id="listing-box">
+                <a href="{% url 'listing' title=item.listing.title %}">{{ item.listing.title }}</a>
+                 {% if item.listing.image_url != '' %}
+                     <img src="{{ item.listing.image_url }}" alt="picture of a {{ item.listing.title }}">
+                 {% endif %}
+                <p>{{ item.listing.description }}</p>
+                 {% if item.highest_bid %} <!-- if the list of bids is not empty-->
+                     <p>Highest bid: R{{ item.highest_bid.bid_amount }}</p>
+                 {% else %}
+                     <p>Starting bid: R{{ item.listing.starting_bid }}</p>
+                 {% endif %}
             </div>
             </li>
         {% endfor %}
+        {% endif %}
     </ul>
     
         
