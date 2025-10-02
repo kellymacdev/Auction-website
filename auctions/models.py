@@ -28,13 +28,16 @@ class Bid(models.Model):
     #to link an item to bids. "
 
     def __str__(self):
-        return f"{self.user} bid R{self.bid_amount} on {self.item} listing"
+        return f"{self.user} bid R{self.bid_amount} on {self.item}"
 
 class Comment(models.Model):
     comment = models.TextField(null=True,blank=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='comments', null=True,blank=True)
     listing = models.ForeignKey(Listing, on_delete=models.CASCADE, related_name='comments', null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True, blank=True,null=True)
+
+    def __str__(self):
+        return f"{self.user} commented on {self.listing}"
 
 class Watchlist(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='watchlist')
@@ -44,4 +47,4 @@ class Watchlist(models.Model):
         constraints = [models.UniqueConstraint(fields=['user', 'listing'], name='unique_watchlist')]
 
     def __str__(self):
-        return f"{self.user}'s watchlist includes {self.listing}"
+        return f"{self.user} added {self.listing} to watchlist"
