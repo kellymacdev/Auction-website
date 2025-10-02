@@ -31,7 +31,10 @@ class Bid(models.Model):
         return f"{self.user} bid R{self.bid_amount} on {self.item} listing"
 
 class Comment(models.Model):
-    pass
+    comment = models.TextField(null=True,blank=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='comments', null=True,blank=True)
+    listing = models.ForeignKey(Listing, on_delete=models.CASCADE, related_name='comments', null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True, blank=True,null=True)
 
 class Watchlist(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='watchlist')

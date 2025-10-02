@@ -1,0 +1,32 @@
+{% extends "auctions/layout.html" %}
+
+{% block body %}
+
+    <h2>Past Auctions</h2>
+    <ul>
+        {% for item in closed_listings %}
+            <li>
+                <div>
+                    <h3> <a href="{% url 'listing' item_id=item.listing.id %}">{{ item.listing.title.capitalize }}</a></h3>
+                        {% if item.listing.image_url != '' %}
+                            <img src="{{ item.listing.image_url }}" alt="picture of a {{ item.listing.title }}">
+                        {% endif %}
+                        <p>{{ item.listing.description }}</p>
+                        {% if item.listing.category != '' %}
+                            <p id="category-title">Category: {{ item.listing.category }}</p>
+                        {% endif %}
+                        <p>Item posted by: {{ item.listing.user.username }}</p>
+                        <p>Starting bid: R{{ item.listing.starting_bid }}</p>
+                        {% if item.listing.winner is not None %}
+                            <p>Winning bid: R{{ item.highest_bid.bid_amount }}</p>
+                        {% else %}
+                            <p>Auction closed with no bids.</p>
+                        {% endif %}
+                </div>
+            </li>
+        {% endfor %}
+    </ul>
+        
+            
+
+{% endblock %}

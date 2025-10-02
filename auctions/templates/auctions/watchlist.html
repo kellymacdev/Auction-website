@@ -1,0 +1,22 @@
+{% extends "auctions/layout.html" %}
+
+{% block body %}
+    
+<h2>{{ user.username.capitalize }}'s Watchlist</h2>
+    {% if watchlist %}
+   <ul>
+        {% for item in watchlist %}
+        <li>
+            <div>
+                    <h3> <a href="{% url 'listing' item_id=item.listing.id %}">{{ item.listing.title.capitalize }}</a></h3>
+                        {% if item.listing.image_url != '' %}
+                            <img src="{{ item.listing.image_url }}" alt="picture of a {{ item.listing.title }}">
+                        {% endif %}
+                </div>
+        </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p>Your watchlist is empty.</p>
+    {% endif %}
+{% endblock %}

@@ -7,7 +7,7 @@ from django.urls import reverse
 from django import forms
 from django.utils.functional import empty
 
-from .models import User, Listing, Bid, Watchlist
+from .models import User, Listing, Bid, Watchlist, Comment
 
 
 class NewListingForm(forms.ModelForm):
@@ -15,7 +15,13 @@ class NewListingForm(forms.ModelForm):
         model = Listing
         fields = ["title", "description", "starting_bid", "image_url", "category"]
 
-
+class NewCommentForm(forms.ModelForm):
+    class Meta:
+        model = Comment
+        fields = ["comment"]
+        labels = {
+            "comment": "Leave a comment",
+        }
 
 
 
@@ -100,10 +106,13 @@ def register(request):
 def listing(request, item_id):
     item = Listing.objects.get(pk=item_id)
     in_watchlist = Watchlist.objects.filter(user=request.user, listing=item).exists()
+    comment_list = item.comments.all()
     return render(request, "auctions/listing.html", {
         "item": item,
         "highest_bid": item.bids.order_by("-bid_amount").first(),
-        "in_watchlist": in_watchlist
+        "in_watchlist": in_watchlist,
+        "comment_form": NewCommentForm(),
+        "comment_list": comment_list
     })
 
 def categories(request):
@@ -177,7 +186,8 @@ def new_bid(request,item_id):
 
 @login_required
 def watchlist(request):
-    users_watchlist1 = Watchlist.objects.filter(user=request.user)
+    # listing__active now refers to the Listing active field
+    users_watchlist1 = Watchlist.objects.filter(user=request.user, listing__active=True)
     return render(request, "auctions/watchlist.html", {
         "watchlist": users_watchlist1
     })
@@ -209,5 +219,24 @@ def remove_watchlist(request, item_id):
         Watchlist.objects.filter(user=request.user, listing=item).delete()
         return redirect("listing", item_id=item.id)
 
-
- #
+@login_required
+def make_comment(request, item_id):
+    item = Listing.objects.get(pk=item_id)
+    in_watchlist = Watchlist.objects.filter(user=request.user, listing=item).exists()
+    if request.method == "POST":
+        new_comment = NewCommentForm(request.POST)
+        if new_comment.is_valid():
+            comment = new_comment.save(commit=False)
+            comment.user = request.user
+            comment.listing = item
+            comment.save()
+            comment_form = NewCommentForm()
+        else:
+            comment_form = new_comment
+        return render(request, "auctions/listing.html", {
+                "item": item,
+                "highest_bid": item.bids.order_by("-bid_amount").first(),
+                "in_watchlist": in_watchlist,
+                "comment_form": comment_form,
+                "comment_list": item.comments.all()
+            })

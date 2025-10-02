@@ -90,4 +90,28 @@
         {% endif %}    
     {% endif %}
     
+    <h3>Comments</h3>
+    <form action="{% url 'make_comment' item_id=item.id %}" method="post">
+        {% csrf_token %}
+        {{ comment_form }}   
+    <button type="submit">Post</button>
+    </form>
+    
+    
+    {% if comment_list %}
+    <ul>
+        {% for thought in comment_list %}
+            <li>
+            <div id="comment_box">
+                <p>{{ thought.user }}:</p>
+                <p>{{ thought.comment }}</p>
+                <p>- {{ thought.created_at }}</p>
+            </div>
+            </li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+    
+    
+    
 {% endblock %}
