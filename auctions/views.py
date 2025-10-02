@@ -5,6 +5,7 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render, redirect
 from django.urls import reverse
 from django import forms
+from django.utils.functional import empty
 
 from .models import User, Listing, Bid, Watchlist
 
@@ -130,6 +131,10 @@ def create_listing(request):
             new.user = request.user
             new.save()
             return redirect("listing", item_id=new.id)
+        else:
+            return render(request, "auctions/create_listing.html", {
+                "new_form": new_listing
+            })
     else:
         return render(request, "auctions/create_listing.html", {
             "new_form": NewListingForm()
@@ -182,7 +187,7 @@ def close_listing(request, item_id):
     if request.method == "POST":
         item = Listing.objects.get(pk=item_id)
         item.active = False
-        if item.bids:
+        if item.bids.exists():
             item.winner = item.bids.order_by("-bid_amount").first().user
         item.save()
 

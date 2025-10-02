@@ -2,7 +2,7 @@
 
 {% block body %}
 
-<h1>Hello, create a listing!</h1>
+<h1>Hello {{ request.user.username.capitalize }}, create a listing!</h1>
 
     <form action="{% url 'create_listing' %}" method="post">
         {% csrf_token %}

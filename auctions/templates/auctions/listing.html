@@ -11,7 +11,7 @@
     {% endif %}
     <p>{{ item.description }}</p>
     {% if item.category != '' %}
-        <p id="category-title">Category: {{ item.category }}</p>
+        <p>Category: <a href="{% url 'category_page' cat=item.category %}" id="category-title">{{ item.category }}</a></p>
     {% endif %}
     <p>Item posted by: {{ item.user.username }}</p>
     <p>Starting bid: R{{ item.starting_bid }}</p>
@@ -80,7 +80,8 @@
             </div>
         {% elif highest_bid %}
             <div id="closed_with_winner_message">
-            <p>This auction is now closed at R{{ highest_bid.bid_amount }}.</p>
+            <p>This auction is now closed at R{{ highest_bid.bid_amount }}.</p> 
+                <p>Auction winner: {{ item.winner.username }}.</p>
             </div>
         {% else %}    
             <div id="closed_no_winner_message">

@@ -21,7 +21,7 @@ class Listing(models.Model):
         return f"Listing {self.id}. {self.title}"
 
 class Bid(models.Model):
-    bid_amount = models.IntegerField(default=0)
+    bid_amount = models.IntegerField()
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='bids')
     item = models.ForeignKey(Listing, on_delete=models.CASCADE, related_name='bids')
     #to link a user to their bids. On deleting a user, their bids are deleted too

@@ -15,7 +15,7 @@
                  {% endif %}
                 <p>{{ item.listing.description }}</p>
                  {% if item.highest_bid %} <!-- if the list of bids is not empty-->
-                     <p>Highest bid: R{{ item.highest_bid.bid_amount }}</p>
+                     <p>Current bid: R{{ item.highest_bid.bid_amount }}</p>
                  {% else %}
                      <p>Starting bid: R{{ item.listing.starting_bid }}</p>
                  {% endif %}
